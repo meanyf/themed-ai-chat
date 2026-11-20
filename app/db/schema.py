@@ -10,3 +10,10 @@ messages = sa.Table(
     sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
     sa.CheckConstraint("role IN ('user', 'assistant')", name="messages_role"),
 )
+
+sessions = sa.Table(
+    "sessions",
+    metadata,
+    sa.Column("token_hash", sa.String(64), primary_key=True),
+    sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
+)
