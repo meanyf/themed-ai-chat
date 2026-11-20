@@ -16,3 +16,5 @@ class FrontendTests(IsolatedAsyncioTestCase):
             styles = await client.get("/styles.css")
             self.assertEqual(styles.status_code, 200)
             self.assertIn("text/css", styles.headers["content-type"])
+            self.assertIn('<script type="module" src="/app.js">', page.text)
+            self.assertEqual((await client.get("/app.js")).status_code, 200)
