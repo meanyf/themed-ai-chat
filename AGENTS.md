@@ -3,7 +3,6 @@
 ## Python
 
 Используем Python 3.12. Пишем код с учётом возможностей этой версии и запускаем тесты на Python 3.12.
-Версия зафиксирована в `.python-version` и `pyproject.toml`.
 
 ## Docstrings
 
