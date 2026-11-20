@@ -1,0 +1,16 @@
+├─ api/                         ← Interface Adapters: Controllers
+│   ├─ routes/
+│   ├─ deps.py
+│   └─ schemas/                 ← Interface Adapters: DTO (Pydantic)
+├─ db/                          ← Frameworks & Drivers: Database
+├─ repositories/                ← Interface Adapters: Gateways (DB adapter)
+├─ services/                    ← Use Cases
+│   ├─ chat.py                  ← Use Cases: Interactor
+│   └─ interfaces/              ← Use Cases: Output Ports (repository, llm)
+├─ domain/                      ← Entities: Enterprise Business Rules
+├─ integrations/                ← Interface Adapters: Gateways (external adapter)
+├─ core/
+│   ├─ config.py
+│   ├─ logging.py
+│   └─ security.py
+└─ main.py
