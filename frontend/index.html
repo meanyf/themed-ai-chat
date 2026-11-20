@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
+    <title>Кулинарный помощник</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <main>
+        <h1>Кулинарный помощник</h1>
+
+        <section id="login-screen" aria-labelledby="login-title">
+            <h2 id="login-title">Вход в чат</h2>
+            <form id="login-form" method="post">
+                <label for="access-key">Ключ доступа</label>
+                <input id="access-key" type="password" required minlength="8" maxlength="255"
+                       autocomplete="current-password" aria-describedby="key-hint">
+                <p id="key-hint">От 8 до 255 символов: латинские буквы, цифры, дефис и подчёркивание.</p>
+                <button type="submit" disabled>Войти</button>
+            </form>
+        </section>
+
+        <section id="chat-screen" aria-labelledby="chat-title" hidden>
+            <header>
+                <h2 id="chat-title">Чат</h2>
+                <button id="logout" type="button">Выйти</button>
+            </header>
+            <ol id="messages" aria-label="История переписки"></ol>
+            <form id="message-form" method="post">
+                <label for="message-text">Ваш вопрос</label>
+                <textarea id="message-text" rows="3" required></textarea>
+                <button type="submit" disabled>Отправить</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>
