@@ -21,15 +21,18 @@
             <form id="login-form" method="post">
                 <label for="access-key">Ключ доступа</label>
                 <input id="access-key" type="password" required minlength="8" maxlength="255"
-                       autocomplete="current-password" aria-describedby="key-hint">
+                       autocomplete="current-password" aria-describedby="key-hint login-error">
+                <button type="button" id="toggle-key" aria-controls="access-key">Показать</button>
+                <p id="login-error" role="alert"></p>
                 <p id="key-hint">От 8 до 255 символов: латинские буквы, цифры, дефис и подчёркивание.</p>
-                <button type="submit" disabled>Войти</button>
+                <button id="login-submit" type="submit" disabled>Войти</button>
             </form>
         </section>
 
         <section id="chat-screen" aria-labelledby="chat-title" hidden>
             <header>
                 <h2 id="chat-title">Чат</h2>
+                <span id="logout-error" role="alert"></span>
                 <button id="logout" type="button">Выйти</button>
             </header>
             <ol id="messages" aria-label="История переписки"></ol>

@@ -131,3 +131,13 @@ button:disabled { color: #63594e; background: #e5ddd0; cursor: default; }
     #chat-screen header, #message-form { padding-block: .25rem; }
     #message-text { height: 44px; }
 }
+
+#login-form #toggle-key {
+    width: auto;
+    background: transparent;
+    color: var(--accent);
+    padding-inline: 0;
+}
+
+#login-error, #logout-error { color: #983521; }
+#login-error:empty, #logout-error:empty { display: none; }
