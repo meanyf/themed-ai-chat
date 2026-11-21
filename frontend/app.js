@@ -1,4 +1,4 @@
-import { getHistory, login, logout } from "./api.js";
+import { getHistory, login, logout, sendMessage } from "./api.js";
 
 const startup = document.querySelector("#startup");
 const status = document.querySelector("#startup-status");
@@ -120,6 +120,8 @@ logoutButton.addEventListener("click", async () => {
         await logout();
         messages.replaceChildren();
         messageText.value = "";
+        sendStatus.textContent = "";
+        updateComposer();
         showLogin();
     } catch {
         logoutError.textContent = "Не удалось выйти. Попробуйте снова.";
@@ -128,5 +130,62 @@ logoutButton.addEventListener("click", async () => {
     }
 });
 
+const messageForm = document.querySelector("#message-form");
+const sendButton = document.querySelector("#send-button");
+const count = document.querySelector("#message-count");
+const sendStatus = document.querySelector("#send-status");
+const maxLength = 500;
+let sending = false;
+
+function updateComposer() {
+    const text = messageText.value;
+    const length = Array.from(text).length;
+    count.textContent = `${length}/${maxLength}`;
+    sendButton.disabled = sending || length > maxLength || !text.trim();
+}
+
+messageText.addEventListener("input", updateComposer);
+messageText.addEventListener("keydown", event => {
+    if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+        event.preventDefault();
+        if (!event.repeat && !sendButton.disabled) messageForm.requestSubmit();
+    }
+});
+
+messageForm.addEventListener("submit", async event => {
+    event.preventDefault();
+    updateComposer();
+    if (sendButton.disabled || logoutButton.disabled) return;
+
+    const text = messageText.value;
+    const createdAt = new Date().toISOString();
+    sending = true;
+    logoutButton.disabled = true;
+    messageText.readOnly = true;
+    emptyHistory.hidden = true;
+    messages.hidden = false;
+    updateComposer();
+    sendStatus.textContent = "Помощник отвечает…";
+    try {
+        const reply = await sendMessage(text);
+        const atBottom = messages.scrollHeight - messages.clientHeight - messages.scrollTop < 2;
+        messages.append(renderMessage({ role: "user", text, created_at: createdAt }), renderMessage(reply));
+        if (atBottom) messages.scrollTop = messages.scrollHeight;
+        messageText.value = "";
+        sendStatus.textContent = "";
+    } catch (error) {
+        emptyHistory.hidden = messages.childElementCount > 0;
+        messages.hidden = !emptyHistory.hidden;
+        sendStatus.textContent = error.status ? error.message : "Не удалось связаться с сервером.";
+    } finally {
+        sending = false;
+        logoutButton.disabled = false;
+        messageText.readOnly = false;
+        updateComposer();
+        messageText.focus();
+    }
+});
+
+updateComposer();
 retry.addEventListener("click", loadHistory);
 loadHistory();

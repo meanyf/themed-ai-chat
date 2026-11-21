@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content">
     <title>Кулинарный помощник</title>
     <link rel="stylesheet" href="/styles.css">
-    <script type="module" src="/app.js"></script>
+    <script type="module" src="/app.js?v=2"></script>
 </head>
 <body>
     <main>
@@ -43,8 +43,10 @@
             <ol id="messages" aria-label="История переписки"></ol>
             <form id="message-form" method="post">
                 <label for="message-text">Ваш вопрос</label>
-                <textarea id="message-text" rows="3" required></textarea>
-                <button type="submit" disabled>Отправить</button>
+                <textarea id="message-text" aria-describedby="message-count" rows="3" required></textarea>
+                <span id="message-count">0/500</span>
+                <span id="send-status" role="status"></span>
+                <button id="send-button" type="submit" disabled>Отправить</button>
             </form>
         </section>
     </main>
