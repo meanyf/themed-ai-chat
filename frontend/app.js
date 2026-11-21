@@ -22,6 +22,7 @@ for (const example of emptyHistory.querySelectorAll("button")) {
 function renderMessage(message) {
     const item = document.createElement("li");
     item.dataset.role = message.role;
+    if (message.id) item.dataset.id = message.id;
     const author = document.createElement("strong");
     author.textContent = message.role === "user" ? "Пользователь" : "Помощник";
     const time = document.createElement("time");
@@ -51,7 +52,8 @@ async function loadHistory() {
         const history = await getHistory();
         startup.hidden = true;
         chatScreen.hidden = false;
-        renderHistory(history);
+        if (pendingCheck) finishHistoryCheck(history);
+        else renderHistory(history);
     } catch (error) {
         if (error.status === 401) {
             showLogin();
@@ -119,6 +121,8 @@ logoutButton.addEventListener("click", async () => {
     try {
         await logout();
         messages.replaceChildren();
+        pendingCheck = null;
+        syncButton.hidden = true;
         messageText.value = "";
         sendStatus.textContent = "";
         updateComposer();
@@ -136,12 +140,57 @@ const count = document.querySelector("#message-count");
 const sendStatus = document.querySelector("#send-status");
 const maxLength = 500;
 let sending = false;
+let pendingCheck = null;
+const syncButton = document.querySelector("#sync-history");
+
+function finishHistoryCheck(history) {
+    const { text, lastId, modelFailed } = pendingCheck;
+    const boundary = history.findIndex(message => message.id === lastId);
+    const candidates = history.slice(boundary + 1).filter(message =>
+        message.role === "user" && message.text === text);
+    renderHistory(history);
+    if (candidates.length === 1 && (!lastId || boundary >= 0)) {
+        if (messageText.value === text) messageText.value = "";
+        sendStatus.textContent = "Вопрос есть в истории.";
+        if (modelFailed) {
+            const item = Array.from(messages.children).find(row => row.dataset.id === candidates[0].id);
+            const note = document.createElement("p");
+            note.textContent = "Не удалось получить ответ.";
+            item.append(note);
+        }
+    } else {
+        sendStatus.textContent = "История обновлена. Проверьте переписку перед повторной отправкой.";
+    }
+    pendingCheck = null;
+    syncButton.hidden = true;
+    updateComposer();
+}
+
+async function checkHistory() {
+    syncButton.disabled = true;
+    try {
+        const check = pendingCheck;
+        const history = await getHistory();
+        if (check && pendingCheck === check) finishHistoryCheck(history);
+    } catch (error) {
+        if (error.status === 401) {
+            showLogin();
+        } else {
+            sendStatus.textContent = "Пока не удалось проверить, сохранился ли вопрос.";
+            syncButton.hidden = false;
+        }
+    } finally {
+        syncButton.disabled = false;
+    }
+}
+
+syncButton.addEventListener("click", checkHistory);
 
 function updateComposer() {
     const text = messageText.value;
     const length = Array.from(text).length;
     count.textContent = `${length}/${maxLength}`;
-    sendButton.disabled = sending || length > maxLength || !text.trim();
+    sendButton.disabled = sending || Boolean(pendingCheck) || length > maxLength || !text.trim();
 }
 
 messageText.addEventListener("input", updateComposer);
@@ -174,15 +223,22 @@ messageForm.addEventListener("submit", async event => {
         messageText.value = "";
         sendStatus.textContent = "";
     } catch (error) {
-        emptyHistory.hidden = messages.childElementCount > 0;
-        messages.hidden = !emptyHistory.hidden;
-        sendStatus.textContent = error.status ? error.message : "Не удалось связаться с сервером.";
+        if (error.status === 401) {
+            sendStatus.textContent = "";
+            showLogin();
+        } else if (!error.status || error.status >= 500) {
+            pendingCheck = { text, lastId: messages.lastElementChild?.dataset.id, modelFailed: error.status === 502 };
+            sendStatus.textContent = "Проверяем историю…";
+            await checkHistory();
+        } else {
+            sendStatus.textContent = error.message;
+        }
     } finally {
         sending = false;
         logoutButton.disabled = false;
         messageText.readOnly = false;
         updateComposer();
-        messageText.focus();
+        if (!chatScreen.hidden) messageText.focus();
     }
 });
 
