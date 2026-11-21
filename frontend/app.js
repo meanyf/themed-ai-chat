@@ -7,6 +7,41 @@ const loginScreen = document.querySelector("#login-screen");
 const chatScreen = document.querySelector("#chat-screen");
 const messages = document.querySelector("#messages");
 
+const emptyHistory = document.querySelector("#empty-history");
+const messageText = document.querySelector("#message-text");
+const dateFormat = new Intl.DateTimeFormat("ru-RU", { dateStyle: "medium", timeStyle: "short" });
+
+for (const example of emptyHistory.querySelectorAll("button")) {
+    example.addEventListener("click", () => {
+        messageText.value = example.textContent;
+        messageText.dispatchEvent(new Event("input", { bubbles: true }));
+        messageText.focus();
+    });
+}
+
+function renderMessage(message) {
+    const item = document.createElement("li");
+    item.dataset.role = message.role;
+    const author = document.createElement("strong");
+    author.textContent = message.role === "user" ? "Пользователь" : "Помощник";
+    const time = document.createElement("time");
+    time.dateTime = message.created_at;
+    time.textContent = dateFormat.format(new Date(message.created_at));
+    const text = document.createElement("p");
+    text.textContent = message.text;
+    item.append(author, time, text);
+    return item;
+}
+
+function renderHistory(history) {
+    const position = messages.scrollTop;
+    const atBottom = messages.scrollHeight - messages.clientHeight - position < 2;
+    messages.hidden = history.length === 0;
+    emptyHistory.hidden = history.length > 0;
+    messages.replaceChildren(...history.map(renderMessage));
+    messages.scrollTop = atBottom ? messages.scrollHeight : position;
+}
+
 async function loadHistory() {
     loginScreen.hidden = true;
     startup.hidden = false;
@@ -14,13 +49,9 @@ async function loadHistory() {
     status.textContent = "Загрузка истории…";
     try {
         const history = await getHistory();
-        messages.replaceChildren(...history.map(message => {
-            const item = document.createElement("li");
-            item.textContent = message.text;
-            return item;
-        }));
         startup.hidden = true;
         chatScreen.hidden = false;
+        renderHistory(history);
     } catch (error) {
         if (error.status === 401) {
             showLogin();
@@ -88,7 +119,7 @@ logoutButton.addEventListener("click", async () => {
     try {
         await logout();
         messages.replaceChildren();
-        document.querySelector("#message-text").value = "";
+        messageText.value = "";
         showLogin();
     } catch {
         logoutError.textContent = "Не удалось выйти. Попробуйте снова.";

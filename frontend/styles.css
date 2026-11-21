@@ -141,3 +141,24 @@ button:disabled { color: #63594e; background: #e5ddd0; cursor: default; }
 
 #login-error, #logout-error { color: #983521; }
 #login-error:empty, #logout-error:empty { display: none; }
+
+#empty-history {
+    align-self: safe center;
+    text-align: center;
+    padding: 1rem;
+    max-height: 100%;
+    overflow: auto;
+}
+
+#empty-title { font: bold 2rem/1.2 Georgia, serif; margin: 0 0 1rem; }
+#empty-history button {
+    margin: .25rem;
+    color: var(--accent);
+    background: var(--surface);
+    border-color: var(--line);
+}
+
+#messages li { width: fit-content; max-width: 95%; }
+#messages li[data-role="user"] { margin-left: auto; background: #efe6da; }
+#messages time { margin-left: .75rem; color: var(--muted); font-size: .8rem; }
+#messages p { margin: .35rem 0 0; }
