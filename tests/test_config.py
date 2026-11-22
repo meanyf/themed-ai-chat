@@ -11,6 +11,16 @@ from app.core.config import load_database_url, load_settings
 
 class ConfigTests(TestCase):
     @patch.dict(os.environ, {}, clear=True)
+    def test_database_requires_password_without_explicit_url(self):
+        with TemporaryDirectory() as directory:
+            path = Path(directory) / ".env"
+            for contents in ("", "POSTGRES_PASSWORD=\n"):
+                with self.subTest(contents=contents):
+                    path.write_text(contents)
+                    with self.assertRaisesRegex(ValueError, "POSTGRES_PASSWORD"):
+                        load_database_url(path)
+
+    @patch.dict(os.environ, {}, clear=True)
     def test_database_uses_compose_values_without_chat_secrets(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / ".env"
@@ -24,7 +34,10 @@ class ConfigTests(TestCase):
     def test_access_key_validation_and_secret_redaction(self):
         with TemporaryDirectory() as directory:
             path = Path(directory) / ".env"
-            path.write_text("ACCESS_KEY=short\nGEMINI_API_KEY=secret-token\nGEMINI_MODEL=test-model\n")
+            path.write_text(
+                "ACCESS_KEY=short\nGEMINI_API_KEY=secret-token\n"
+                "GEMINI_MODEL=test-model\nPOSTGRES_PASSWORD=test-password\n"
+            )
             with self.assertRaisesRegex(ValueError, "ACCESS_KEY"):
                 load_settings(path)
             os.environ["ACCESS_KEY"] = "valid_key-123"

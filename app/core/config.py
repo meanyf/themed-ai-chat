@@ -29,10 +29,13 @@ def _values(env_file: Path) -> dict[str, str]:
 def _database_url(values: dict[str, str]) -> str:
     if url := values.get("DATABASE_URL"):
         return url
+    password = values.get("POSTGRES_PASSWORD")
+    if not password:
+        raise ValueError("Задайте POSTGRES_PASSWORD.")
     url = URL.create(
         "postgresql+asyncpg",
         username="chat",
-        password=values.get("POSTGRES_PASSWORD") or "chat_local",
+        password=password,
         host=values.get("POSTGRES_HOST") or "127.0.0.1",
         port=int(values.get("POSTGRES_PORT") or "5432"),
         database="chat",

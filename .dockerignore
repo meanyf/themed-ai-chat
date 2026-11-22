@@ -1,0 +1,11 @@
+*
+!Dockerfile
+!pyproject.toml
+!alembic.ini
+!app/
+!app/**
+!migrations/
+!migrations/**
+!frontend/
+!frontend/**
+**/__pycache__/
