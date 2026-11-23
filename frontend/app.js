@@ -148,22 +148,23 @@ let pendingCheck = null;
 const syncButton = document.querySelector("#sync-history");
 
 function finishHistoryCheck(history) {
-    const { text, lastId, modelFailed } = pendingCheck;
+    const { text, lastId, modelError } = pendingCheck;
     const boundary = history.findIndex(message => message.id === lastId);
     const candidates = history.slice(boundary + 1).filter(message =>
         message.role === "user" && message.text === text);
     renderHistory(history);
     if (candidates.length === 1 && (!lastId || boundary >= 0)) {
         if (messageText.value === text) messageText.value = "";
-        sendStatus.textContent = modelFailed ? "" : "Вопрос есть в истории.";
-        if (modelFailed) {
+        sendStatus.textContent = modelError ? "" : "Вопрос есть в истории.";
+        if (modelError) {
             const item = Array.from(messages.children).find(row => row.dataset.id === candidates[0].id);
             const note = document.createElement("p");
-            note.textContent = "Не удалось получить ответ.";
+            note.textContent = modelError;
             item.append(note);
         }
     } else {
-        sendStatus.textContent = "История обновлена. Проверьте переписку перед повторной отправкой.";
+        const historyStatus = "История обновлена. Проверьте переписку перед повторной отправкой.";
+        sendStatus.textContent = modelError ? `${modelError} ${historyStatus}` : historyStatus;
     }
     pendingCheck = null;
     syncButton.hidden = true;
@@ -180,7 +181,8 @@ async function checkHistory() {
         if (error.status === 401) {
             showLogin();
         } else {
-            sendStatus.textContent = "Пока не удалось проверить, сохранился ли вопрос.";
+            sendStatus.textContent = pendingCheck?.modelError
+                || "Пока не удалось проверить, сохранился ли вопрос.";
             syncButton.hidden = false;
         }
     } finally {
@@ -244,7 +246,7 @@ messageForm.addEventListener("submit", async event => {
             sendStatus.textContent = "";
             showLogin();
         } else if (!error.status || error.status >= 500) {
-            pendingCheck = { text, lastId, modelFailed: error.status === 502 };
+            pendingCheck = { text, lastId, modelError: error.status === 502 ? error.message : null };
             sendStatus.textContent = "Проверяем историю…";
             await checkHistory();
         } else {

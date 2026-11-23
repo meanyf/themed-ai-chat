@@ -19,4 +19,4 @@ async def send(body: MessageRequest, chat: ChatService = Depends(get_chat)) -> M
     try:
         return await chat.send_message(body.text)
     except LLMError as exc:
-        raise HTTPException(502, "Не удалось получить ответ модели.") from exc
+        raise HTTPException(502, exc.provider_message or "Не удалось получить ответ модели.") from exc

@@ -39,14 +39,30 @@ class GeminiClient:
             with urlopen(request, timeout=30) as response:
                 body = json.load(response)
         except HTTPError as exc:
-            exc.close()
-            raise LLMError(f"Gemini вернул ошибку HTTP {exc.code}.") from exc
+            with exc:
+                provider_message = _extract_error_message(exc)
+            if provider_message and self._api_key:
+                provider_message = provider_message.replace(self._api_key, "[скрыто]")
+            raise LLMError(
+                f"Gemini вернул ошибку HTTP {exc.code}.", provider_message=provider_message,
+            ) from exc
         except (OSError, HTTPException) as exc:
             raise LLMError("Не удалось получить ответ от Gemini.") from exc
         except ValueError as exc:
             raise LLMError("Gemini вернул некорректный JSON.") from exc
 
         return _extract_reply(body)
+
+
+def _extract_error_message(response: HTTPError) -> str | None:
+    """Читает текст ошибки из ответа Gemini."""
+    try:
+        message = json.load(response).get("error", {}).get("message")
+    except (AttributeError, ValueError, OSError, HTTPException):
+        return None
+    if isinstance(message, str) and message.strip():
+        return message
+    return None
 
 
 def _extract_reply(body: dict) -> str:
