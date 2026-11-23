@@ -11,5 +11,5 @@ async def test_root_serves_login_page(http_client):
     styles = await http_client.get("/styles.css")
     assert styles.status_code == 200
     assert "text/css" in styles.headers["content-type"]
-    assert '<script type="module" src="/app.js?v=2">' in page.text
-    assert (await http_client.get("/app.js?v=2")).status_code == 200
+    assert '<script type="module" src="/app.js?v=3">' in page.text
+    assert (await http_client.get("/app.js?v=3")).status_code == 200

@@ -34,6 +34,14 @@ function renderMessage(message) {
     return item;
 }
 
+function appendMessage(message) {
+    const atBottom = messages.scrollHeight - messages.clientHeight - messages.scrollTop < 2;
+    const item = renderMessage(message);
+    messages.append(item);
+    if (atBottom) messages.scrollTop = messages.scrollHeight;
+    return item;
+}
+
 function renderHistory(history) {
     const position = messages.scrollTop;
     const atBottom = messages.scrollHeight - messages.clientHeight - position < 2;
@@ -207,27 +215,30 @@ messageForm.addEventListener("submit", async event => {
     if (sendButton.disabled || logoutButton.disabled) return;
 
     const text = messageText.value;
-    const createdAt = new Date().toISOString();
+    const lastId = messages.lastElementChild?.dataset.id;
     sending = true;
     logoutButton.disabled = true;
     messageText.readOnly = true;
+    messageText.value = "";
     emptyHistory.hidden = true;
     messages.hidden = false;
+    const question = appendMessage({ role: "user", text, created_at: new Date().toISOString() });
     updateComposer();
     sendStatus.textContent = "Помощник отвечает…";
     try {
         const reply = await sendMessage(text);
-        const atBottom = messages.scrollHeight - messages.clientHeight - messages.scrollTop < 2;
-        messages.append(renderMessage({ role: "user", text, created_at: createdAt }), renderMessage(reply));
-        if (atBottom) messages.scrollTop = messages.scrollHeight;
-        messageText.value = "";
+        appendMessage(reply);
         sendStatus.textContent = "";
     } catch (error) {
+        question.remove();
+        messages.hidden = messages.children.length === 0;
+        emptyHistory.hidden = !messages.hidden;
+        messageText.value = text;
         if (error.status === 401) {
             sendStatus.textContent = "";
             showLogin();
         } else if (!error.status || error.status >= 500) {
-            pendingCheck = { text, lastId: messages.lastElementChild?.dataset.id, modelFailed: error.status === 502 };
+            pendingCheck = { text, lastId, modelFailed: error.status === 502 };
             sendStatus.textContent = "Проверяем историю…";
             await checkHistory();
         } else {
