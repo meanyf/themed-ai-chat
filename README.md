@@ -69,7 +69,14 @@ PostgreSQL хранит общую историю и сессии между п�
 Для запуска тестов понадобится uv.
 
 ```bash
-uv run --locked --extra test python -m unittest discover -s tests
+uv run --locked --extra test python -m pytest
+```
+
+Интеграционные тесты применяют миграции к временной PostgreSQL и проверяют вход, переписку после повторного запуска жизненного цикла приложения и выход. Ответ Gemini подменяется в тесте.
+
+```bash
+docker compose -f compose.test.yml up --build --force-recreate --abort-on-container-exit --exit-code-from tests
+docker compose -f compose.test.yml down
 ```
 
 ## Что можно доработать

@@ -9,4 +9,7 @@
 !migrations/**
 !frontend/
 !frontend/**
+
+!tests/
+!tests/**
 **/__pycache__/

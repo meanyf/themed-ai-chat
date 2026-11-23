@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12-slim AS base
 COPY --from=ghcr.io/astral-sh/uv:0.13.7 /uv /usr/local/bin/uv
 
 WORKDIR /srv/chat
@@ -14,6 +14,11 @@ COPY alembic.ini .
 COPY migrations/ migrations/
 COPY frontend/ frontend/
 
+FROM base AS tests
+RUN uv sync --locked --extra test --no-install-project
+COPY tests/ tests/
+
+FROM base AS runtime
 USER 65532:65532
 EXPOSE 8000
 CMD ["sh", "-c", "alembic upgrade head && exec python -m uvicorn app.main:app --host 0.0.0.0 --port 8000"]

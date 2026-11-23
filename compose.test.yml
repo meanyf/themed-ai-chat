@@ -1,0 +1,28 @@
+name: themed-ai-chat-tests
+services:
+  test-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: chat_test
+      POSTGRES_PASSWORD: test
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "postgres", "-d", "chat_test"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
+
+  tests:
+    build:
+      context: .
+      target: tests
+    depends_on:
+      test-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:test@test-db:5432/chat_test
+      ACCESS_KEY: integration_test
+      GEMINI_API_KEY: test
+      GEMINI_MODEL: test
+    command: ["sh", "-ec", "alembic upgrade head && python -m pytest -m integration tests/integration -v"]
