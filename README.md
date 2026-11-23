@@ -66,18 +66,13 @@ PostgreSQL хранит общую историю и сессии между п�
 
 ## Тесты
 
-Для запуска тестов понадобится uv.
+Docker Compose поднимает временную PostgreSQL и запускает все Python-тесты. Перед интеграционным тестом pytest применяет миграции. Тест проверяет вход, сохранение переписки после перезапуска приложения и выход. Ключ Gemini для тестов не нужен.
 
 ```bash
-uv run --locked --extra test python -m pytest
+docker compose -f compose.test.yml run --build --rm tests pytest
 ```
 
-Интеграционные тесты применяют миграции к временной PostgreSQL и проверяют вход, переписку после повторного запуска жизненного цикла приложения и выход. Ответ Gemini подменяется в тесте.
-
-```bash
-docker compose -f compose.test.yml up --build --force-recreate --abort-on-container-exit --exit-code-from tests
-docker compose -f compose.test.yml down
-```
+Эту же команду можно повторять. Закончив работу, остановите тестовую базу командой `docker compose -f compose.test.yml down`.
 
 ## Что можно доработать
 
