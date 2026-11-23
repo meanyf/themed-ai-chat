@@ -34,17 +34,13 @@ function renderMessage(message) {
     return item;
 }
 
-function appendMessage(message) {
-    const atBottom = messages.scrollHeight - messages.clientHeight - messages.scrollTop < 2;
-    const item = renderMessage(message);
-    messages.append(item);
-    if (atBottom) messages.scrollTop = messages.scrollHeight;
-    return item;
+function isHistoryAtBottom() {
+    return messages.scrollHeight - messages.clientHeight - messages.scrollTop < 2;
 }
 
 function renderHistory(history) {
     const position = messages.scrollTop;
-    const atBottom = messages.scrollHeight - messages.clientHeight - position < 2;
+    const atBottom = isHistoryAtBottom();
     messages.hidden = history.length === 0;
     emptyHistory.hidden = history.length > 0;
     messages.replaceChildren(...history.map(renderMessage));
@@ -222,14 +218,24 @@ messageForm.addEventListener("submit", async event => {
     messageText.value = "";
     emptyHistory.hidden = true;
     messages.hidden = false;
-    const question = appendMessage({ role: "user", text, created_at: new Date().toISOString() });
+    const question = renderMessage({ role: "user", text, created_at: new Date().toISOString() });
+    const waiting = document.createElement("li");
+    const progress = document.createElement("span");
+    progress.setAttribute("role", "status");
+    waiting.append(progress);
+    const scrollToQuestion = isHistoryAtBottom();
+    messages.append(question, waiting);
+    progress.textContent = "Помощник отвечает…";
+    if (scrollToQuestion) messages.scrollTop = messages.scrollHeight;
     updateComposer();
-    sendStatus.textContent = "Помощник отвечает…";
+    sendStatus.textContent = "";
     try {
         const reply = await sendMessage(text);
-        appendMessage(reply);
-        sendStatus.textContent = "";
+        const scrollToReply = isHistoryAtBottom();
+        waiting.replaceWith(renderMessage(reply));
+        if (scrollToReply) messages.scrollTop = messages.scrollHeight;
     } catch (error) {
+        waiting.remove();
         question.remove();
         messages.hidden = messages.children.length === 0;
         emptyHistory.hidden = !messages.hidden;
