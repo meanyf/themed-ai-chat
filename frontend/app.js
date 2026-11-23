@@ -155,7 +155,7 @@ function finishHistoryCheck(history) {
     renderHistory(history);
     if (candidates.length === 1 && (!lastId || boundary >= 0)) {
         if (messageText.value === text) messageText.value = "";
-        sendStatus.textContent = "Вопрос есть в истории.";
+        sendStatus.textContent = modelFailed ? "" : "Вопрос есть в истории.";
         if (modelFailed) {
             const item = Array.from(messages.children).find(row => row.dataset.id === candidates[0].id);
             const note = document.createElement("p");
